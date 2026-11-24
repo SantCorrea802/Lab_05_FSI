@@ -1,0 +1,18 @@
+LibroYa — prueba local WebSocket
+Fecha: 2026-11-23
+Comando: npm.cmd run test -w server
+
+✔ API: registro, permisos, precio y propiedad de pedidos
+✔ registro: la contraseña se cifra y el token vence y se verifica
+✔ pedido: el servidor calcula precio, reserva stock y respeta idempotencia
+✔ pedido: cantidades inválidas no cambian stock y cancelación lo libera
+✔ captura: rechaza importe, moneda e identificador distintos
+✔ PayPal: crea orden con importe del servidor y URL de retorno
+✔ API: captura Sandbox simulada confirma una sola vez y entrega eBook
+✔ WebSocket: autentica y envía cada pedido solo a su cliente y al personal
+
+tests 8; pass 8; fail 0; cancelled 0; skipped 0; todo 0.
+
+El nuevo caso usa SQLite en memoria y sockets locales. Verifica autenticación,
+rechazo del token inválido y filtrado de eventos por dueño del pedido y rol de
+personal. No sustituye una prueba de reconexión en el navegador público.

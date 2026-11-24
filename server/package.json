@@ -1,0 +1,21 @@
+{
+  "name": "libroya-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/seed.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cors": "2.8.6",
+    "dotenv": "16.6.1",
+    "express": "5.2.1",
+    "mongoose": "^9.12.3",
+    "ws": "8.21.3"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

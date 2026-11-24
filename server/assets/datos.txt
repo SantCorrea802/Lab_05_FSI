@@ -1,0 +1,5 @@
+DATOS QUE CUENTAN HISTORIAS
+
+Edición de muestra para el laboratorio LibroYa.
+
+Capítulo 1. Un dato se vuelve útil cuando conocemos su origen, su calidad y la pregunta que puede responder.

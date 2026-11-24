@@ -1,0 +1,12 @@
+{
+  "name": "libroya-laboratorio",
+  "private": true,
+  "workspaces": ["web", "server"],
+  "scripts": {
+    "dev:server": "npm run dev -w server",
+    "dev:web": "npm run dev -w web",
+    "setup:atlas": "npm install mongoose@9.12.3 -w server",
+    "test": "npm run test -w server",
+    "build": "npm run build -w web"
+  }
+}

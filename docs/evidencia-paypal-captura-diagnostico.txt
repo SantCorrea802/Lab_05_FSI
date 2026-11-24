@@ -1,0 +1,36 @@
+Diagnostico PayPal Sandbox despues del retorno con error (23 de noviembre de 2026)
+
+Se ejecuto scripts/diagnosticar-pago-paypal.mjs, que solo consulta Atlas y PayPal.
+La salida compartida se resume sin identificadores ni datos personales:
+
+  Pedido LibroYa: PENDING_PAYMENT; pago local: CREATED.
+  PayPal Sandbox: COMPLETED; captura: COMPLETED.
+  Identificador de pedido coincide: true.
+  Importe y moneda coinciden: true.
+
+Conclusion: PayPal ya capturo la transaccion ficticia de US$14,99. LibroYa aun no actualizo
+su pedido. No se debe crear otra compra ni cancelar este pedido. La correccion local pide
+la respuesta completa de PayPal, consulta el detalle si recibe una respuesta abreviada,
+reconcilia capturas ya realizadas y bloquea su cancelacion. Pendiente de despliegue y
+verificacion manual del pedido original.
+
+Diagnostico ampliado posterior, tambien de solo lectura:
+  84b862fd: LibroYa=CANCELLED/CANCELLED, PayPal=COMPLETED/COMPLETED, datos coinciden=true.
+  c1a132e5: LibroYa=CANCELLED/CANCELLED, PayPal=PAYER_ACTION_REQUIRED/sin captura.
+  69a6218f: LibroYa=CANCELLED, sin orden PayPal.
+  Capturas PayPal sin registrar en LibroYa: 1.
+
+El pedido 84b862fd es el que debe recuperarse. La nueva correccion local acepta la
+reconciliacion de un pedido cancelado solo si PayPal confirma ID, importe, moneda y captura;
+en ese caso vuelve a reservar el stock en una transaccion. El vencimiento futuro consulta
+PayPal antes de cancelar. Las 10 pruebas del servidor y la compilacion web pasaron;
+faltan despliegue y comprobacion manual.
+
+Despliegue posterior compartido por el usuario:
+  libroya-api: build con 10/10 pruebas aprobadas; estado Online.
+  libroya-web: build Next.js 16.4.6 aprobado; estado Online.
+  Aun falta pulsar Verificar pago en el pedido 84b862fd y comprobar la descarga.
+
+Comprobacion visual posterior: e49.png muestra el pedido 84b862fd en estado Entregado,
+el aviso Pago confirmado, el boton Descargar y la bolsa vacia. e50.png muestra el archivo
+Datos que cuentan historias.txt abierto, con contenido de muestra.

@@ -1,0 +1,17 @@
+TestSprite — LibroYa — ejecución pública
+Fecha: 2026-11-23
+Objetivo: https://libroya-web-production.up.railway.app
+Proyecto: c2bcd3d9-6e66-4615-b00a-611df8b3de56
+Ejecución: a8f5f91b-acf0-4315-a477-fe09e7dc78a8
+
+T05 Carrito: cantidades y subtotal — aprobado
+Resultado: 7dd69a2a-cb8f-47dd-97e7-fda2db37757b
+T04 Búsqueda y filtro de categoría — aprobado
+Resultado: 8d01e4ec-98a4-4df6-af75-058d0c33505c
+T01 Catálogo público — aprobado
+Resultado: c7e6d901-e9f6-45c1-b41c-21c750bfcae1
+
+Resumen: 3/3 aprobados; 0 fallidos; 0 tiempos agotados.
+Panel: https://www.testsprite.com/dashboard-v3/o/75eab160-efbe-58cb-83e2-11833f7e98d7/projects/c2bcd3d9-6e66-4615-b00a-611df8b3de56/execution/a8f5f91b-acf0-4315-a477-fe09e7dc78a8
+
+Transcripción de la salida compartida por el estudiante, omitiendo la ruta local y avisos de la CLI.

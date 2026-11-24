@@ -1,0 +1,5 @@
+ARQUITECTURAS DE LA INFORMACIÓN
+
+Edición de muestra para el laboratorio LibroYa.
+
+Capítulo 1. Una arquitectura de información ordena conceptos, datos y recorridos para que las personas puedan encontrar lo que necesitan.
