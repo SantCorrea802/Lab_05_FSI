@@ -10,13 +10,9 @@ coverage/
 .testsprite/
 .railway/
 guia_extraida.txt
-_extract_pdf.py
-_offline_registry.cjs
 .npm-cache/
 evidencias/
 docs/figuras/
 *.pdf
 !INFORME.pdf
-INFORME.md
 .informe-fuente.md
-scripts/generar-informe.py

@@ -2,11 +2,11 @@
 
 ```mermaid
 flowchart LR
-  B[Navegador] -->|HTTPS| W[Next.js]
-  B -->|REST + WebSocket autenticado| A[Express]
-  A -->|transacciones| D[(MongoDB Atlas o SQLite local)]
+  B[Navegador] -->|HTTPS| W[Next.js en Railway]
+  B -->|REST + WSS autenticado| A[Express en Railway]
+  A -->|transacciones| D[(MongoDB Atlas)]
   A -->|HTTPS| P[PayPal Sandbox]
-  T[TestSprite] -.->|Túnel local para pruebas iniciales| W
+  T[TestSprite] -.->|URL pública| W
 ```
 
 Se separó Next.js del backend para que el servidor controle autenticación, precios, stock, pagos y estados. WebSocket comparte el proceso de Express. Se eligió `ws` en lugar de Socket.IO para un protocolo mínimo; cada conexión se autentica con un primer mensaje y recibe únicamente sus pedidos o, si es personal, eventos de operación. La interfaz recupera el estado por REST al reconectar.
@@ -48,6 +48,7 @@ Los importes se expresan en centavos USD para evitar errores de punto flotante. 
 
 - El token se guarda en `sessionStorage`; expira a las 24 horas. El sitio debe mantener protección contra XSS y usar HTTPS en producción.
 - La limitación de login es en memoria por proceso, suficiente para demostración local; producción requiere un almacén compartido y controles de abuso adicionales.
-- La captura usa `PayPal-Request-Id` estable para reducir duplicados, pero falta una recuperación automática ante fallo entre captura externa y escritura en la base de datos, y una exclusión distribuida si se ejecutan varias réplicas. Mantener una sola instancia y revisar pagos antes de una liberación real.
+- La captura usa `PayPal-Request-Id` estable para reducir duplicados. Si PayPal confirma la captura pero falla la escritura local, la opción «Verificar pago» permite conciliar el pedido tras consultar y validar la captura. La recuperación todavía requiere una acción manual; no existe exclusión distribuida entre varias réplicas. Mantener una sola instancia y revisar pagos antes de una liberación real.
+- Para pedidos cancelados con una orden PayPal asociada, el historial consulta a PayPal antes de ofrecer «Verificar pago». Si PayPal no responde, el historial sigue disponible pero oculta temporalmente esa opción; una nueva carga puede volver a comprobarla. La consulta añade latencia y necesitaría caché o conciliación programada en un sistema comercial.
 - El contenido digital se almacena como texto de hasta 90 KB; un catálogo comercial necesitaría almacenamiento de objetos y enlaces de descarga temporales.
 - El stock reservado vence a los 30 minutos mediante tarea del proceso. Si el servidor está detenido, se libera cuando vuelve a iniciar y corre la tarea.

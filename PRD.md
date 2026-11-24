@@ -36,7 +36,7 @@ Permitir que una persona encuentre y compre libros digitales o impresos, mientra
 - Contraseñas y claves fuera del repositorio.
 - Pruebas automáticas para permisos, precio, stock, idempotencia y validación de captura.
 
-## Escenarios TestSprite propuestos
+## Escenarios de prueba
 
 | ID | Escenario | Resultado esperado | Prioridad |
 |---|---|---|---|
@@ -52,7 +52,6 @@ Permitir que una persona encuentre y compre libros digitales o impresos, mientra
 | T10 | Cambiar estado y observar otra sesión | Actualización automática | Alta |
 | T11 | Cantidad negativa/dirección vacía | Error 400 | Media |
 | T12 | Recargar rutas y reconectar WebSocket | Estado recuperado por REST | Media |
-| T13 | Descargar eBook ajeno o no pagado | 403 | Alta |
-| T14 | Pedido impreso sin guía al enviar | Error de validación | Media |
+**Datos de prueba:** cuentas ficticias dedicadas, catálogo creado por `seed`, PayPal Sandbox. No introducir credenciales personales en TestSprite. Los resultados se presentan en el [informe PDF](INFORME.pdf).
 
-**Datos de prueba:** cuentas ficticias dedicadas, catálogo creado por `seed`, PayPal Sandbox. No introducir credenciales personales en TestSprite. La evidencia de ejecución real está en [resultados](docs/RESULTADOS_PRUEBAS.md).
+Los recorridos de interfaz se guardaron en TestSprite. Las respuestas HTTP y las reglas del servidor que el navegador automatizado no pudo observar se comprobaron con pruebas de API; el cambio de estado entre dos sesiones se verificó manualmente y con una prueba WebSocket. El informe distingue esas evidencias del resultado de la suite.

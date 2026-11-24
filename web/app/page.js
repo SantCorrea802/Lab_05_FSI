@@ -116,6 +116,10 @@ export default function Home() {
   const checkout = async () => {
     if (!session) { setShowAuth(true); setMessage('Inicia sesión para continuar.'); return; }
     if (!cartItems.length) return;
+    if (hasPhysical && (address.trim().length < 10 || address.trim().length > 300)) {
+      setMessage('Ingresa una dirección de entrega de entre 10 y 300 caracteres.');
+      return;
+    }
     setBusy(true); setMessage('');
     try {
       const key = sessionStorage.getItem('libroya_checkout_key') || crypto.randomUUID();

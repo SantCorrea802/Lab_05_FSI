@@ -36,8 +36,11 @@ test('WebSocket: autentica y envía cada pedido solo a su cliente y al personal'
     const unexpected = [];
     clientB.on('message', msg => unexpected.push(JSON.parse(msg.toString())));
 
-    const order = { id: store.newId(), userId: alice.id, items: [], totalCents: 100,
+    const order = { id: store.newId(), userId: alice.id,
+      items: [{ bookId: 'libro-impreso-prueba', title: 'Libro impreso de prueba', format: 'physical', quantity: 1, unitPriceCents: 100 }],
+      totalCents: 100,
       shippingCents: 0, status: 'PAID', paymentStatus: 'CAPTURED', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    store.saveOrder(order);
     const forA = once(clientA, 'message');
     const forStaff = once(staffSocket, 'message');
     publish(order, 'order:updated');
@@ -46,6 +49,29 @@ test('WebSocket: autentica y envía cada pedido solo a su cliente y al personal'
       assert.equal(message.event, 'order:updated');
       assert.equal(message.order.id, order.id);
     }
+    await new Promise(resolve => setTimeout(resolve, 30));
+    assert.deepEqual(unexpected, []);
+
+    const statusForA = once(clientA, 'message');
+    const statusForStaff = once(staffSocket, 'message');
+    const updated = await fetch(`http://127.0.0.1:${server.address().port}/api/orders/${order.id}/status`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${signToken(staff, secret)}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'PREPARING' })
+    });
+    assert.equal(updated.status, 200);
+    assert.equal((await updated.json()).order.status, 'PREPARING');
+    for (const result of [await statusForA, await statusForStaff]) {
+      const message = JSON.parse(result[0].toString());
+      assert.equal(message.event, 'order:statusChanged');
+      assert.equal(message.order.id, order.id);
+      assert.equal(message.order.status, 'PREPARING');
+    }
+    const customerView = await fetch(`http://127.0.0.1:${server.address().port}/api/orders/${order.id}`, {
+      headers: { Authorization: `Bearer ${signToken(alice, secret)}` }
+    });
+    assert.equal(customerView.status, 200);
+    assert.equal((await customerView.json()).order.status, 'PREPARING');
     await new Promise(resolve => setTimeout(resolve, 30));
     assert.deepEqual(unexpected, []);
 

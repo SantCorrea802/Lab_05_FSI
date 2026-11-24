@@ -1,6 +1,10 @@
 export class AppError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
+export function paypalOrderCaptured(provider) {
+  return provider?.status === 'COMPLETED' || Boolean(provider?.purchase_units?.some(unit =>
+    unit.payments?.captures?.some(capture => capture.status === 'COMPLETED')));
+}
 export const cents = (v) => Math.round(Number(v) * 100);
 export const money = (v) => (v / 100).toFixed(2);
 export function requireText(value, label, min = 1, max = 200) {
@@ -30,7 +34,9 @@ export async function makeOrder(store, userId, payload, key) {
       await store.saveBook({ ...book, stock: book.stock - quantity, updatedAt: new Date().toISOString() });
     }
     const needsShipping = items.some(i => i.format === 'physical');
-    const address = needsShipping ? requireText(payload.address, 'Dirección', 10, 300) : '';
+    const address = needsShipping ? (typeof payload.address === 'string' ? payload.address.trim() : '') : '';
+    if (needsShipping && (address.length < 10 || address.length > 300))
+      throw new AppError(400, 'Ingresa una dirección de entrega de entre 10 y 300 caracteres');
     const shippingCents = needsShipping ? 500 : 0;
     const now = new Date().toISOString();
     const order = {
@@ -69,7 +75,7 @@ export async function expireUnpaidOrders(store, paypal, publish, now = Date.now(
       const payment = await store.getPaymentByOrder(order.id);
       if (payment?.providerOrderId) {
         const provider = await paypal.getOrder(payment.providerOrderId);
-        if (provider.status === 'COMPLETED' || provider.purchase_units?.some(unit => unit.payments?.captures?.some(capture => capture.status === 'COMPLETED')))
+        if (paypalOrderCaptured(provider))
           continue;
       }
       publish(await cancelOrder(store, order), 'order:updated');

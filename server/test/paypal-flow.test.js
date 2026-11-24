@@ -90,3 +90,35 @@ test('API: reconcilia una captura ya completada por PayPal tras un fallo local',
     assert.equal(store.getBook(book.id).stock, 1);
   } finally { await new Promise(resolve => server.close(resolve)); store.close(); }
 });
+
+test('API: cancelación sin captura oculta verificación y libera stock', async () => {
+  const store = openDatabase(':memory:');
+  const book = store.saveBook({ id: store.newId(), title: 'Digital', author: 'Editorial', description: 'Libro de prueba digital',
+    category: 'Datos', format: 'ebook', priceCents: 1299, stock: 2, available: true, digitalContent: 'Contenido' });
+  const paypal = {
+    currency: 'USD', configured: true,
+    createOrder: async () => ({ id: 'paypal-cancelled', links: [{ rel: 'payer-action', href: 'https://www.sandbox.paypal.com/pay/checkout?token=paypal-cancelled' }] }),
+    getOrder: async () => ({ id: 'paypal-cancelled', status: 'PAYER_ACTION_REQUIRED', purchase_units: [] })
+  };
+  const { app } = createApp(store, { CLIENT_ORIGIN: 'http://localhost:3000', JWT_SECRET: 'otra-clave-larga-de-prueba-para-tests' }, { paypal });
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const call = async (path, method, body, token) => {
+    const res = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      ...(body ? { body: JSON.stringify(body) } : {}) });
+    return { status: res.status, data: await res.json() };
+  };
+  try {
+    const registered = await call('/api/auth/register', 'POST', { name: 'Cliente ficticio', email: 'cancel@example.test', password: 'password-123456' });
+    const token = registered.data.token;
+    const order = (await call('/api/orders', 'POST', { items: [{ bookId: book.id, quantity: 1 }] }, token)).data.order;
+    assert.equal((await call('/api/payments/paypal/order', 'POST', { orderId: order.id }, token)).status, 201);
+    assert.equal((await call(`/api/orders/${order.id}/cancel`, 'POST', {}, token)).status, 200);
+    const history = await call('/api/orders/me', 'GET', null, token);
+    assert.equal(history.status, 200);
+    assert.equal(history.data.orders.find(item => item.id === order.id).status, 'CANCELLED');
+    assert.equal(history.data.orders.find(item => item.id === order.id).canVerifyPayment, false);
+    assert.equal(store.getBook(book.id).stock, 2);
+  } finally { await new Promise(resolve => server.close(resolve)); store.close(); }
+});

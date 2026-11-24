@@ -46,7 +46,9 @@ test('API: registro, permisos, precio y propiedad de pedidos', async () => {
     assert.equal((await call(`/api/orders/${ebookOrder.id}/download/${book.id}`, 'GET', null, b.data.token)).status, 403);
     const physical = store.saveBook({ id: store.newId(), title: 'Impreso', author: 'Editorial', description: 'Libro impreso de prueba', category: 'Datos',
       format: 'physical', priceCents: 2000, stock: 1, available: true });
-    assert.equal((await call('/api/orders', 'POST', { items: [{ bookId: physical.id, quantity: 1 }], address: '' }, a.data.token)).status, 400);
+    const missingAddress = await call('/api/orders', 'POST', { items: [{ bookId: physical.id, quantity: 1 }], address: '' }, a.data.token);
+    assert.equal(missingAddress.status, 400);
+    assert.match(missingAddress.data.error, /dirección de entrega/i);
     assert.equal(store.getBook(physical.id).stock, 1);
     const physicalOrder = (await call('/api/orders', 'POST', { items: [{ bookId: physical.id, quantity: 1 }], address: 'Calle 1 # 2-3, Bogotá' }, a.data.token)).data.order;
     assert.equal(physicalOrder.totalCents, 2500);

@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import { hashPassword, verifyPassword, signToken, verifyToken, publicUser } from './security.js';
-import { AppError, requireText, makeOrder, cancelOrder, publicOrder } from './logic.js';
+import { AppError, requireText, makeOrder, cancelOrder, publicOrder, paypalOrderCaptured } from './logic.js';
 import { paypalClient, verifyCapture } from './paypal.js';
 import { fileURLToPath } from 'node:url';
 
@@ -36,6 +36,13 @@ export function createApp(store, env = process.env, services = {}) {
     if (!order) throw new AppError(404, 'Pedido no encontrado');
     if (order.userId !== req.user.id && req.user.role !== 'staff') throw new AppError(403, 'Acceso denegado');
     return order;
+  };
+  const canVerifyCanceledPayment = async (order) => {
+    if (order.status !== 'CANCELLED') return false;
+    const payment = await store.getPaymentByOrder(order.id);
+    if (!payment?.providerOrderId) return false;
+    try { return paypalOrderCaptured(await paypal.getOrder(payment.providerOrderId)); }
+    catch { return false; }
   };
   const publish = (order, event) => {
     const summary = publicOrder(order);
@@ -116,7 +123,7 @@ export function createApp(store, env = process.env, services = {}) {
     const ownedOrders = (await store.listOrders()).filter(o => o.userId === req.user.id);
     const orders = await Promise.all(ownedOrders.map(async order => ({
       ...publicOrder(order, true),
-      canVerifyPayment: order.status === 'CANCELLED' && Boolean((await store.getPaymentByOrder(order.id))?.providerOrderId)
+      canVerifyPayment: await canVerifyCanceledPayment(order)
     })));
     res.json({ orders });
   }));
@@ -127,7 +134,7 @@ export function createApp(store, env = process.env, services = {}) {
     const payment = await store.getPaymentByOrder(order.id);
     if (payment?.providerOrderId) {
       const provider = await paypal.getOrder(payment.providerOrderId);
-      if (provider.status === 'COMPLETED' || provider.purchase_units?.some(unit => unit.payments?.captures?.some(capture => capture.status === 'COMPLETED')))
+      if (paypalOrderCaptured(provider))
         throw new AppError(409, 'Pago ya capturado en PayPal; usa Verificar pago');
     }
     const result = await cancelOrder(store, order); publish(result, 'order:updated');

@@ -12,9 +12,7 @@ web/.env.local
 *.sqlite-*
 evidencias/
 docs/
-scripts/
 *.pdf
-INFORME.md
 .informe-fuente.md
 PRD.md
 README.md
